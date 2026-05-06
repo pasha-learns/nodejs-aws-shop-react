@@ -33,7 +33,7 @@ export default function Header() {
             underline="none"
             to="/"
           >
-            My Store!
+            My Shop — AWS (Task 2)
           </Link>
         </Typography>
 
