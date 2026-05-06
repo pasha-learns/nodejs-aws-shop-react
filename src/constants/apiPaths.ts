@@ -1,13 +1,17 @@
-const productBaseUrl = (
+const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
+
+const productBaseUrl = trimTrailingSlash(
   import.meta.env.VITE_PRODUCT_SERVICE_URL ?? ""
-).replace(/\/+$/, "");
+);
+
+const apiBaseUrl = trimTrailingSlash(import.meta.env.VITE_API_URL ?? "");
 
 const API_PATHS = {
   product: productBaseUrl,
-  order: "https://.execute-api.eu-west-1.amazonaws.com/dev",
-  import: "https://.execute-api.eu-west-1.amazonaws.com/dev",
-  bff: "https://.execute-api.eu-west-1.amazonaws.com/dev",
-  cart: "https://.execute-api.eu-west-1.amazonaws.com/dev",
+  order: apiBaseUrl,
+  import: apiBaseUrl,
+  bff: apiBaseUrl,
+  cart: apiBaseUrl,
 };
 
 export default API_PATHS;

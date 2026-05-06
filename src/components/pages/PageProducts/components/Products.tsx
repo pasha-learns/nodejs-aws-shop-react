@@ -9,7 +9,7 @@ import AddProductToCart from "~/components/AddProductToCart/AddProductToCart";
 import { useAvailableProducts } from "~/queries/products";
 
 export default function Products() {
-  const { data, isLoading } = useAvailableProducts();
+  const { data, isLoading, isError, error } = useAvailableProducts();
   const items = Array.isArray(data) ? data : [];
 
   if (isLoading) {

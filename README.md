@@ -8,6 +8,8 @@ Frontend for the nodejs-aws mentoring program.
 
 `start` — dev with mocked API. `build` → `dist/`. `preview` — local prod build. `test` / `test:ui` / `test:coverage`. `lint`, `prettier`.
 
+Env: copy `.env.example` to `.env`. Empty `VITE_PRODUCT_SERVICE_URL` and `VITE_API_URL` → dev and **production** builds bundle MSW so CloudFront can show mocked products/cart. Set those URLs and rebuild for real APIs. `VITE_ENABLE_MSW=false` turns MSW off even when URLs are empty.
+
 Deploy (from repo root, after `npm install` and `npm run build` working):
 
 | Command | |

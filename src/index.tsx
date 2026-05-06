@@ -15,7 +15,19 @@ const queryClient = new QueryClient({
 });
 
 function shouldUseMsw() {
-  return import.meta.env.DEV || import.meta.env.VITE_ENABLE_MSW === "true";
+  const productUrl = (import.meta.env.VITE_PRODUCT_SERVICE_URL ?? "").trim();
+  const apiUrl = (import.meta.env.VITE_API_URL ?? "").trim();
+  const flag = import.meta.env.VITE_ENABLE_MSW;
+  if (flag === "false" || flag === "0") {
+    return false;
+  }
+  if (flag === "true" || flag === "1") {
+    return true;
+  }
+  if (import.meta.env.DEV) {
+    return true;
+  }
+  return import.meta.env.PROD && !productUrl && !apiUrl;
 }
 
 async function main() {
