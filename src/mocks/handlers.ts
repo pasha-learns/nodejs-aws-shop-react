@@ -1,11 +1,32 @@
 import { rest } from "msw";
 import API_PATHS from "~/constants/apiPaths";
-import { availableProducts, orders, products, cart } from "~/mocks/data";
+import {
+  availableProducts,
+  orders,
+  products,
+  cart as seedCart,
+} from "~/mocks/data";
 import { CartItem } from "~/models/CartItem";
 import { Order } from "~/models/Order";
 import { AvailableProduct, Product } from "~/models/Product";
 
+function cloneCart(source: CartItem[]): CartItem[] {
+  return source.map((row) => ({
+    count: row.count,
+    product: { ...row.product },
+  }));
+}
+
+let cartState = cloneCart(seedCart);
+
 export const handlers = [
+  rest.get(`${API_PATHS.product}/products`, (req, res, ctx) => {
+    return res(
+      ctx.status(200),
+      ctx.delay(),
+      ctx.json<AvailableProduct[]>(availableProducts)
+    );
+  }),
   rest.get(`${API_PATHS.bff}/product`, (req, res, ctx) => {
     return res(ctx.status(200), ctx.delay(), ctx.json<Product[]>(products));
   }),
@@ -34,10 +55,26 @@ export const handlers = [
     );
   }),
   rest.get(`${API_PATHS.cart}/profile/cart`, (req, res, ctx) => {
-    return res(ctx.status(200), ctx.delay(), ctx.json<CartItem[]>(cart));
+    return res(ctx.status(200), ctx.delay(), ctx.json<CartItem[]>(cartState));
   }),
   rest.put(`${API_PATHS.cart}/profile/cart`, (req, res, ctx) => {
-    return res(ctx.status(200));
+    const body = req.body as CartItem;
+    const idx = cartState.findIndex((i) => i.product.id === body.product.id);
+    if (body.count <= 0) {
+      if (idx >= 0) {
+        cartState = cartState.filter((_, i) => i !== idx);
+      }
+    } else if (idx >= 0) {
+      cartState = cartState.map((row, i) =>
+        i === idx ? { product: { ...body.product }, count: body.count } : row
+      );
+    } else {
+      cartState = [
+        ...cartState,
+        { product: { ...body.product }, count: body.count },
+      ];
+    }
+    return res(ctx.status(200), ctx.json<CartItem[]>(cartState));
   }),
   rest.get(`${API_PATHS.order}/order`, (req, res, ctx) => {
     return res(ctx.status(200), ctx.delay(), ctx.json<Order[]>(orders));

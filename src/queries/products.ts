@@ -4,14 +4,31 @@ import { AvailableProduct } from "~/models/Product";
 import { useQuery, useQueryClient, useMutation } from "react-query";
 import React from "react";
 
+function normalizeProductList(payload: unknown): AvailableProduct[] {
+  if (Array.isArray(payload)) {
+    return payload as AvailableProduct[];
+  }
+  if (payload && typeof payload === "object") {
+    const o = payload as Record<string, unknown>;
+    if (Array.isArray(o.products)) {
+      return o.products as AvailableProduct[];
+    }
+    if (Array.isArray(o.items)) {
+      return o.items as AvailableProduct[];
+    }
+    if (Array.isArray(o.data)) {
+      return o.data as AvailableProduct[];
+    }
+  }
+  return [];
+}
+
 export function useAvailableProducts() {
   return useQuery<AvailableProduct[], AxiosError>(
     "available-products",
     async () => {
-      const res = await axios.get<AvailableProduct[]>(
-        `${API_PATHS.product}/products`
-      );
-      return res.data;
+      const res = await axios.get<unknown>(`${API_PATHS.product}/products`);
+      return normalizeProductList(res.data);
     }
   );
 }
