@@ -1,38 +1,39 @@
 # React-shop-cloudfront
 
-This is frontend starter project for nodejs-aws mentoring program. It uses the following technologies:
+Frontend for the nodejs-aws mentoring program.
 
-- [Vite](https://vitejs.dev/) as a project bundler
-- [React](https://beta.reactjs.org/) as a frontend framework
-- [React-router-dom](https://reactrouterdotcom.fly.dev/) as a routing library
-- [MUI](https://mui.com/) as a UI framework
-- [React-query](https://react-query-v3.tanstack.com/) as a data fetching library
-- [Formik](https://formik.org/) as a form library
-- [Yup](https://github.com/jquense/yup) as a validation schema
-- [Vitest](https://vitest.dev/) as a test runner
-- [MSW](https://mswjs.io/) as an API mocking library
-- [Eslint](https://eslint.org/) as a code linting tool
-- [Prettier](https://prettier.io/) as a code formatting tool
-- [TypeScript](https://www.typescriptlang.org/) as a type checking tool
+- Vite, React, react-router-dom, MUI, react-query, Formik, Yup, Vitest, MSW, ESLint, Prettier, TypeScript
 
-## Available Scripts
+## Scripts
 
-### `start`
+`start` — dev with mocked API. `build` → `dist/`. `preview` — local prod build. `test` / `test:ui` / `test:coverage`. `lint`, `prettier`.
 
-Starts the project in dev mode with mocked API on local environment.
+Env: copy `.env.example` to `.env`. Empty `VITE_PRODUCT_SERVICE_URL` and `VITE_API_URL` → dev and **production** builds bundle MSW so CloudFront can show mocked products/cart. Set those URLs and rebuild for real APIs. `VITE_ENABLE_MSW=false` turns MSW off even when URLs are empty.
 
-### `build`
+Deploy (from repo root, after `npm install` and `npm run build` working):
 
-Builds the project for production in `dist` folder.
+| Command | |
+|---------|--|
+| `npm run deploy:cdk:s3` | Build + deploy `ShopS3Stack` (S3 only). |
+| `npm run deploy:cdk` | Build + deploy `ShopStack` (private S3, CloudFront OAC, invalidation on deploy). |
+| `npm run cdk:destroy:s3` | Destroy `ShopS3Stack`. |
+| `npm run cdk:destroy` | Destroy `ShopStack`. |
 
-### `preview`
+Bootstrap once per account/region (replace ids):
 
-Starts the project in production mode on local environment.
+```bash
+cd cdk && npx cdk bootstrap aws://<account-id>/<region>
+```
 
-### `test`, `test:ui`, `test:coverage`
+CDK code: `cdk/bin/shop.ts`, `cdk/lib/shop-stack.ts`, `cdk/lib/shop-s3-only-stack.ts`.
 
-Runs tests in console, in browser or with coverage.
+## Deploy URLs
 
-### `lint`, `prettier`
+Fill after `npm run deploy:cdk`:
 
-Runs linting and formatting for all files in `src` folder.
+| | URL |
+|--|-----|
+| CloudFront | |
+| S3 website | |
+
+With OAC and a private bucket, use the CloudFront URL; the S3 website endpoint usually returns 403.
