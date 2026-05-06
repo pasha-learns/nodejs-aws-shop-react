@@ -1,5 +1,9 @@
+const productBaseUrl = (
+  import.meta.env.VITE_PRODUCT_SERVICE_URL ?? ""
+).replace(/\/+$/, "");
+
 const API_PATHS = {
-  product: "https://.execute-api.eu-west-1.amazonaws.com/dev",
+  product: productBaseUrl,
   order: "https://.execute-api.eu-west-1.amazonaws.com/dev",
   import: "https://.execute-api.eu-west-1.amazonaws.com/dev",
   bff: "https://.execute-api.eu-west-1.amazonaws.com/dev",
