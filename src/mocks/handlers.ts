@@ -10,6 +10,17 @@ import { CartItem } from "~/models/CartItem";
 import { Order } from "~/models/Order";
 import { AvailableProduct, Product } from "~/models/Product";
 
+let productServiceCatalog: AvailableProduct[] = availableProducts.map((p) => ({
+  ...p,
+}));
+
+function newProductId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+  return `mock-${Date.now()}`;
+}
+
 function cloneCart(source: CartItem[]): CartItem[] {
   return source.map((row) => ({
     count: row.count,
@@ -24,8 +35,32 @@ export const handlers = [
     return res(
       ctx.status(200),
       ctx.delay(),
-      ctx.json<AvailableProduct[]>(availableProducts)
+      ctx.json<AvailableProduct[]>(productServiceCatalog)
     );
+  }),
+  rest.get(`${API_PATHS.product}/products/:productId`, (req, res, ctx) => {
+    const product = productServiceCatalog.find((p) => p.id === req.params.productId);
+    if (!product) {
+      return res(ctx.status(404), ctx.json({ message: "Product not found" }));
+    }
+    return res(ctx.status(200), ctx.delay(), ctx.json<AvailableProduct>(product));
+  }),
+  rest.post(`${API_PATHS.product}/products`, async (req, res, ctx) => {
+    const body = (await req.json()) as {
+      title?: string;
+      description?: string;
+      price?: number;
+      count?: number;
+    };
+    const created: AvailableProduct = {
+      id: newProductId(),
+      title: typeof body.title === "string" ? body.title : "",
+      description: typeof body.description === "string" ? body.description : "",
+      price: typeof body.price === "number" ? body.price : 0,
+      count: typeof body.count === "number" ? body.count : 0,
+    };
+    productServiceCatalog = [...productServiceCatalog, created];
+    return res(ctx.status(201), ctx.delay(), ctx.json<AvailableProduct>(created));
   }),
   rest.get(`${API_PATHS.bff}/product`, (req, res, ctx) => {
     return res(ctx.status(200), ctx.delay(), ctx.json<Product[]>(products));

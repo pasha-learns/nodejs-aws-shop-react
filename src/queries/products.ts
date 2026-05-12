@@ -45,6 +45,13 @@ export function useAvailableProduct(id?: string) {
   return useQuery<AvailableProduct, AxiosError>(
     ["product", { id }],
     async () => {
+      const productBase = API_PATHS.product;
+      if (productBase) {
+        const res = await axios.get<AvailableProduct>(
+          `${productBase}/products/${encodeURIComponent(id!)}`
+        );
+        return res.data;
+      }
       const res = await axios.get<AvailableProduct>(
         `${API_PATHS.bff}/product/${id}`
       );
@@ -63,14 +70,35 @@ export function useRemoveProductCache() {
   );
 }
 
+function toNonNegativeInt(value: number): number {
+  const n = Math.round(Number(value));
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
 export function useUpsertAvailableProduct() {
-  return useMutation((values: AvailableProduct) =>
-    axios.put<AvailableProduct>(`${API_PATHS.bff}/product`, values, {
-      headers: {
-        Authorization: `Basic ${localStorage.getItem("authorization_token")}`,
-      },
-    })
-  );
+  return useMutation((values: AvailableProduct) => {
+    const existingId = values.id?.trim();
+    if (existingId) {
+      return axios.put<AvailableProduct>(`${API_PATHS.bff}/product`, values, {
+        headers: {
+          Authorization: `Basic ${localStorage.getItem("authorization_token")}`,
+        },
+      });
+    }
+    const productBase = API_PATHS.product;
+    if (!productBase) {
+      return Promise.reject(
+        new Error("VITE_PRODUCT_SERVICE_URL is required to create a product")
+      );
+    }
+    const body = {
+      title: values.title,
+      description: values.description ?? "",
+      price: toNonNegativeInt(values.price),
+      count: toNonNegativeInt(values.count),
+    };
+    return axios.post<AvailableProduct>(`${productBase}/products`, body);
+  });
 }
 
 export function useDeleteAvailableProduct() {
