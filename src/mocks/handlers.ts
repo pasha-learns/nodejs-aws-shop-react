@@ -30,7 +30,14 @@ function cloneCart(source: CartItem[]): CartItem[] {
 
 let cartState = cloneCart(seedCart);
 
-export const handlers = [
+const forceAllMocks =
+  import.meta.env.VITE_ENABLE_MSW === "true" ||
+  import.meta.env.VITE_ENABLE_MSW === "1";
+
+const mockProductService = forceAllMocks || !API_PATHS.product;
+const mockApiRoutes = forceAllMocks || !API_PATHS.cart;
+
+const productServiceHandlers = [
   rest.get(`${API_PATHS.product}/products`, (req, res, ctx) => {
     return res(
       ctx.status(200),
@@ -39,19 +46,37 @@ export const handlers = [
     );
   }),
   rest.get(`${API_PATHS.product}/products/:productId`, (req, res, ctx) => {
-    const product = productServiceCatalog.find((p) => p.id === req.params.productId);
+    const product = productServiceCatalog.find(
+      (p) => p.id === req.params.productId
+    );
     if (!product) {
       return res(ctx.status(404), ctx.json({ message: "Product not found" }));
     }
-    return res(ctx.status(200), ctx.delay(), ctx.json<AvailableProduct>(product));
+    return res(
+      ctx.status(200),
+      ctx.delay(),
+      ctx.json<AvailableProduct>(product)
+    );
   }),
-  rest.post(`${API_PATHS.product}/products`, async (req, res, ctx) => {
-    const body = (await req.json()) as {
+  rest.post(`${API_PATHS.product}/products`, (req, res, ctx) => {
+    const raw = req.body as unknown;
+    let body: {
       title?: string;
       description?: string;
       price?: number;
       count?: number;
     };
+    if (typeof raw === "string") {
+      try {
+        body = JSON.parse(raw) as typeof body;
+      } catch {
+        body = {};
+      }
+    } else if (raw && typeof raw === "object") {
+      body = raw as typeof body;
+    } else {
+      body = {};
+    }
     const created: AvailableProduct = {
       id: newProductId(),
       title: typeof body.title === "string" ? body.title : "",
@@ -60,8 +85,15 @@ export const handlers = [
       count: typeof body.count === "number" ? body.count : 0,
     };
     productServiceCatalog = [...productServiceCatalog, created];
-    return res(ctx.status(201), ctx.delay(), ctx.json<AvailableProduct>(created));
+    return res(
+      ctx.status(201),
+      ctx.delay(),
+      ctx.json<AvailableProduct>(created)
+    );
   }),
+];
+
+const bffCartOrderHandlers = [
   rest.get(`${API_PATHS.bff}/product`, (req, res, ctx) => {
     return res(ctx.status(200), ctx.delay(), ctx.json<Product[]>(products));
   }),
@@ -130,4 +162,9 @@ export const handlers = [
   rest.put(`${API_PATHS.order}/order/:id/status`, (req, res, ctx) => {
     return res(ctx.status(200));
   }),
+];
+
+export const handlers = [
+  ...(mockProductService ? productServiceHandlers : []),
+  ...(mockApiRoutes ? bffCartOrderHandlers : []),
 ];

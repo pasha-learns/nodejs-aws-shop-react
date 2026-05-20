@@ -25,9 +25,9 @@ function shouldUseMsw() {
     return true;
   }
   if (import.meta.env.DEV) {
-    return true;
+    return !(productUrl && apiUrl);
   }
-  return import.meta.env.PROD && !productUrl && !apiUrl;
+  return !productUrl || !apiUrl;
 }
 
 async function main() {
